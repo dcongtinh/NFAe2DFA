@@ -6,6 +6,7 @@ class NFAe:
     current_states = None
 
     def __init__(self, states, alphabet, transition_function, start_state, accept_states):
+        # Khởi tạo input
         self.states = states
         self.n_state = len(states) + 1  # độ dài tập trạng thái
         self.alphabet = alphabet
@@ -108,3 +109,14 @@ class NFAe:
             table.add_row(row)
 
         print(table)
+
+    def check(self, w):
+        print("Chuoi " + w + " co thuoc ngon ngu da cho?")
+        q = self.eClosure(self.start_state)
+        for c in w:
+            t = self.transition_to_state(q, c)
+            q = self.eClosure(t)
+        if self.in_accept_states(q):
+            print("YES")
+        else:
+            print("NO")

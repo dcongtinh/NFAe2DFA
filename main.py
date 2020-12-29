@@ -1,6 +1,6 @@
 from FA import NFAe
 
-# Khởi tạo input
+# Nhập input
 states = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}  # trạng thái states
 alphabet = {'a', 'b', 'e'}  # bộ chữ cái nhập alphabet
 alphabet = sorted(alphabet)
@@ -23,8 +23,11 @@ transition_function = {
 start_state = {0}  # trạng thái bắt đầu
 accept_states = {10}  # trạng thái kết thúc
 
-nfa = NFAe(states, alphabet, transition_function,
-           start_state, accept_states)
+nfae = NFAe(states, alphabet, transition_function,
+            start_state, accept_states)
 
-transition_function_new = nfa.toDFA()
-nfa.printDFA(transition_function_new)
+transition_function_new = nfae.toDFA()
+nfae.printDFA(transition_function_new)
+
+w = "aaaaaaabb"
+nfae.check(w)
