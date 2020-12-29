@@ -1,18 +1,27 @@
 from FA import NFAe
 
 # Khởi tạo input
-states = {1, 2, 3}  # trạng thái states
+states = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}  # trạng thái states
 alphabet = {'a', 'b', 'e'}  # bộ chữ cái nhập alphabet
+alphabet = sorted(alphabet)
+
 # Hàm chuyển trạng thái
 transition_function = {
-    (1, 'a'): {3},
-    (1, 'e'): {2},
-    (2, 'a'): {1},
-    (3, 'a'): {2},
-    (3, 'b'): {2, 3},
+    (0, 'e'): {1, 7},
+    (1, 'e'): {2, 4},
+    (2, 'a'): {3},
+    (3, 'e'): {6},
+    (4, 'b'): {5},
+    (5, 'e'): {6},
+    (6, 'e'): {1, 7},
+    (7, 'a'): {8},
+    (8, 'b'): {9},
+    (9, 'b'): {10},
 }
-start_state = {1}  # trạng thái bắt đầu
-accept_states = {2}  # trạng thái kết thúc
+
+
+start_state = {0}  # trạng thái bắt đầu
+accept_states = {10}  # trạng thái kết thúc
 
 nfa = NFAe(states, alphabet, transition_function,
            start_state, accept_states)

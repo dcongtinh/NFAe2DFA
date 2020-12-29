@@ -55,6 +55,9 @@ class NFAe:
                 v = v | self.transition_function[(u, alp)]
         return v
 
+    def in_accept_states(self, states):
+        return (states & self.accept_states) != set()
+
     def toDFA(self):
         d = {}  # Ánh xạ sang trạng thái mới A, B, C,...
         labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
@@ -66,7 +69,6 @@ class NFAe:
         states_new = [start]
         idx, transition_function_new = 0, []
         while idx < len(states_new):
-            isDone = True
             for alp in self.alphabet_without_e:
                 t = self.transition_to_state(states_new[idx], alp)
                 u = self.eClosure(t)
@@ -75,19 +77,15 @@ class NFAe:
                     states_new.append(u)
                     d[tuple(u)] = labels[len(states_new)-1]
                     u = d[tuple(u)]
-                    isDone = False
                 elif u == set():
                     u = 'oo'
                 else:
                     u = d[tuple(u)]
-
                 transition_function_new.append(
                     ((d[tuple(states_new[idx])], alp), u))
                 # print(states_new[idx], '0', e)
 
             idx += 1
-            if isDone:  # Không còn trạng thái nào chưa xét
-                break
         return transition_function_new
 
     def printDFA(self, transition_function_new):
