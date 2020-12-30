@@ -1,5 +1,6 @@
 import numpy as np
 from prettytable import PrettyTable
+from utils import textcolor_display
 
 
 class NFAe:
@@ -59,13 +60,26 @@ class NFAe:
     def in_accept_states(self, states):
         return (states & self.accept_states) != set()
 
+    def in_start_state(self, state):
+        return (state & self.start_state) != set()
+
+    def get_label_color(self, state, label):
+        if self.in_accept_states(state):
+            return textcolor_display(label, 'end')
+
+        if self.in_start_state(state):
+            return textcolor_display(label, 'start')
+
+        return label
+
     def toDFA(self):
         d = {}  # Ánh xạ sang trạng thái mới A, B, C,...
         labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
                   'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
         # Tính epsilon closure của trạng thái bắt đầu
         start = self.eClosure(self.start_state)
-        d[tuple(start)] = labels[0]  # Đánh dấu là A
+        d[tuple(start)] = self.get_label_color(
+            start, labels[0])  # Đánh dấu là A
         # Thêm start vào tập chuyển trạng thái mới (Q') của DFA
         states_new = [start]
         idx, transition_function_new = 0, []
@@ -76,7 +90,9 @@ class NFAe:
                 if u != set() and u not in states_new:  # nếu u không có trong tập trạng thái Q' của DFA
                     # Thêm u vào tập trạng thái Q' của DFA
                     states_new.append(u)
-                    d[tuple(u)] = labels[len(states_new)-1]
+
+                    d[tuple(u)] = self.get_label_color(
+                        u, labels[len(states_new)-1])
                     u = d[tuple(u)]
                 elif u == set():
                     u = 'oo'
