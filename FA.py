@@ -1,10 +1,9 @@
 import cv2
 import numpy as np
 import networkx as nx
-import matplotlib.pyplot as plt
 from prettytable import PrettyTable
-from utils import textcolor_display, remove_textcolor
 from networkx.drawing.nx_agraph import to_agraph
+from utils import textcolor_display, remove_textcolor
 
 
 class NFAe:
@@ -16,7 +15,7 @@ class NFAe:
         self.n_state = len(states) + 1  # độ dài tập trạng thái
         self.alphabet = alphabet
         # Bộ chữ cái nhập không chứa epsilon
-        self.alphabet_without_e = [alp for alp in alphabet if alp != 'e']
+        self.alphabet_without_e = [alp for alp in alphabet if alp != 'ε']
         self.transition_function = transition_function
         self.start_state = start_state
         self.accept_states = accept_states
@@ -40,7 +39,7 @@ class NFAe:
         self.visited[u] = True
         A.append(u)
         for v, w in self.ke[u]:
-            if not self.visited[v] and w == 'e':
+            if not self.visited[v] and w == 'ε':
                 self.eClosure1(v, A)
 
     # Tính epsilon closure của tập các u
@@ -63,20 +62,32 @@ class NFAe:
                 v = v | self.transition_function[(u, alp)]
         return v
 
-    def in_accept_states(self, states):
-        return (states & self.accept_states) != set()
+    def in_accept_states(self, states, name='NFAe'):
+        accept_states = {}
+        if name == 'NFAe':
+            accept_states = self.accept_states
 
-    def in_start_state(self, state):
-        return (state & self.start_state) != set()
+        elif name == 'DFA':
+            accept_states = set(self.accept_states_dfa)
+
+        return (states & accept_states) != set()
+
+    def in_start_state(self, state, name='NFAe'):
+        start_state = {}
+        if name == 'NFAe':
+            start_state = self.start_state
+
+        elif name == 'DFA':
+            start_state = set(self.start_state_dfa)
+
+        return (state & start_state) != set()
 
     def get_label_color(self, state, label):
-        if self.in_start_state(state):
-            self.start_state_dfa.append(label)
-            return textcolor_display(label, 'start')
+        if self.in_start_state(state, 'DFA'):
+            return textcolor_display(str(label), 'start')
 
-        if self.in_accept_states(state):
-            self.accept_states_dfa.append(label)
-            return textcolor_display(label, 'end')
+        if self.in_accept_states(state, 'DFA'):
+            return textcolor_display(str(label), 'end')
 
         return label
 
@@ -84,81 +95,96 @@ class NFAe:
         d = {}  # Ánh xạ sang trạng thái mới A, B, C,...
         labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
                   'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+        self.keDFA = {}
+        for label in labels:
+            self.keDFA[label] = []
+        self.states_dfa = {'A'}
+        self.start_state_dfa = {'A'}
+        self.accept_states_dfa = set()
         # Tính epsilon closure của trạng thái bắt đầu
         start = self.eClosure(self.start_state)
-        d[tuple(start)] = self.get_label_color(
-            start, labels[0])  # Đánh dấu là A
+        d[tuple(start)] = labels[0]  # Đánh dấu là A
         # Thêm start vào tập chuyển trạng thái mới (Q') của DFA
         states_new = [start]
-        idx, transition_function_dfa = 0, []
+        idx = 0
+
         while idx < len(states_new):
             for alp in self.alphabet_without_e:
                 t = self.transition_to_state(states_new[idx], alp)
-                u = self.eClosure(t)
-                if u != set() and u not in states_new:  # nếu u không có trong tập trạng thái Q' của DFA
-                    # Thêm u vào tập trạng thái Q' của DFA
-                    states_new.append(u)
+                v = self.eClosure(t)
+                if v != set() and v not in states_new:  # nếu v không có trong tập trạng thái Q' của DFA
+                    # Thêm v vào tập trạng thái Q' của DFA
+                    states_new.append(v)
+                    label = labels[len(states_new)-1]
+                    d[tuple(v)] = label
+                    self.states_dfa.add(label)
+                    if self.in_start_state(v):
+                        self.start_state_dfa.add(d[tuple(v)])
 
-                    d[tuple(u)] = self.get_label_color(
-                        u, labels[len(states_new)-1])
-                    u = d[tuple(u)]
-                elif u == set():
-                    u = 'oo'
+                    if self.in_accept_states(v):
+                        self.accept_states_dfa.add(d[tuple(v)])
+                    v = d[tuple(v)]
+                elif v == set():
+                    v = 'oo'
                 else:
-                    u = d[tuple(u)]
-                transition_function_dfa.append(
-                    ((d[tuple(states_new[idx])], alp), u))
-                # print(states_new[idx], '0', e)
-
+                    v = d[tuple(v)]
+                self.keDFA[d[tuple(states_new[idx])]].append((v, alp))
             idx += 1
-        return transition_function_dfa
+        self.states_dfa = sorted(self.states_dfa)
+        self.start_state_dfa = sorted(self.start_state_dfa)
+        self.accept_states_dfa = sorted(self.accept_states_dfa)
 
-    def printDFA(self, transition_function_dfa, table=True, graph=True):
+    def printGraph(self, name="DFA"):
+        if name == "NFAe":
+            states = self.states
+            start_state = self.start_state
+            accept_states = self.accept_states
+            ke = self.ke
+        else:
+            states = self.states_dfa
+            start_state = self.start_state_dfa
+            accept_states = self.accept_states_dfa
+            ke = self.keDFA
+
+        G = nx.MultiDiGraph()
+        G.add_nodes_from(tuple(start_state), penwidth=2.0, color="blue")
+        G.add_nodes_from([' '], penwidth=0.0)
+        for u in start_state:
+            G.add_edge(' ', u, label=' Start', penwidth=2.0)
+        G.add_nodes_from(tuple(accept_states), penwidth=2.0, color="red")
+
+        for u in states:
+            for v, w in ke[u]:
+                G.add_edge(u, v, label=' ' + w)
+
+        G.graph['edge'] = {'arrowsize': '0.6', 'splines': 'curved'}
+        G.graph['graph'] = {'scale': '14'}
+
+        A = to_agraph(G)
+        A.layout('dot')
+        filename = name + '.png'
+        A.draw(filename)
+        fig = cv2.imread(filename)
+        cv2.imshow(name, fig)
+        cv2.waitKey(0)
+
+        # closing all open windows
+        cv2.destroyAllWindows()
+        pass
+
+    def printDFAFuncTable(self):
         header = ['']
         for alp in self.alphabet_without_e:
             header.append(alp)
-        _table = PrettyTable(header)
-        _table.align['Label'] = 'l'
-        _table.border = _table.header = True
-
-        G = nx.MultiDiGraph()
-        G.add_nodes_from(self.start_state_dfa, penwidth=2.0, color="blue")
-        G.add_nodes_from([' '], penwidth=0.0)
-        for u in self.start_state_dfa:
-            G.add_edge(' ', u, label=' Start', penwidth=2.0)
-        G.add_nodes_from(self.accept_states_dfa, penwidth=2.0, color="red")
-        for i in range(0, len(transition_function_dfa), 2):
-            u = transition_function_dfa[i][0][0]
-            row = [u]
-            for j in range(len(self.alphabet_without_e)):
-                w = self.alphabet_without_e[j]
-                try:
-                    v = transition_function_dfa[i+j][1]
-                    _u = remove_textcolor(u)
-                    _v = remove_textcolor(v)
-                    G.add_edge(_u, _v, label=' ' + w)
-                except:
-                    v = 'oo'
-                row.append(v)
-            _table.add_row(row)
-
-        if table:
-            print(_table)
-
-        if graph:
-            G.graph['edge'] = {'arrowsize': '0.6', 'splines': 'curved'}
-            G.graph['graph'] = {'scale': '14'}
-
-            A = to_agraph(G)
-            A.layout('dot')
-            filename = 'DFA.png'
-            A.draw(filename)
-            dfa = cv2.imread(filename)
-            cv2.imshow('DFA', dfa)
-            cv2.waitKey(0)
-
-            # closing all open windows
-            cv2.destroyAllWindows()
+        table = PrettyTable(header)
+        table.align['Label'] = 'l'
+        table.border = table.header = True
+        for u in self.states_dfa:
+            row = [self.get_label_color({u}, u)]
+            for v, w in self.keDFA[u]:
+                row.append(self.get_label_color({v}, v))
+            table.add_row(row)
+        print(table)
 
     def check(self, w):
         print("Chuoi " + w + " co thuoc ngon ngu da cho?")
