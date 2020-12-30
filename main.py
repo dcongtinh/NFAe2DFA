@@ -28,9 +28,10 @@ nfae = NFAe(states, alphabet, transition_function,
 
 # nfae.printNFAe()
 nfae.toDFA()
+nfae.printNFAeFuncTable()
 nfae.printDFAFuncTable()
-nfae.printGraph('NFAe')
-nfae.printGraph('DFA')
+# nfae.printGraph('NFAe')
+# nfae.printGraph('DFA')
 
 # w = "aaaaaaabb"
 # nfae.check(w)

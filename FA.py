@@ -7,8 +7,6 @@ from utils import textcolor_display, remove_textcolor
 
 
 class NFAe:
-    current_states = None
-
     def __init__(self, states, alphabet, transition_function, start_state, accept_states):
         # Khởi tạo input
         self.states = states
@@ -19,7 +17,6 @@ class NFAe:
         self.transition_function = transition_function
         self.start_state = start_state
         self.accept_states = accept_states
-        self.current_states = start_state
         self.start_state_dfa = []
         self.accept_states_dfa = []
         # Tập các đỉnh kề
@@ -43,7 +40,6 @@ class NFAe:
                 self.eClosure1(v, A)
 
     # Tính epsilon closure của tập các u
-
     def eClosure(self, v):  # v: vector, set, array
         A = np.array([], dtype='int')
         for u in v:
@@ -54,7 +50,6 @@ class NFAe:
         return set(np.unique(A))
 
     # Tính các giá trị của hàm chuyên
-
     def transition_to_state(self, states, alp):
         v = set()
         for u in states:
@@ -66,7 +61,6 @@ class NFAe:
         accept_states = {}
         if name == 'NFAe':
             accept_states = self.accept_states
-
         elif name == 'DFA':
             accept_states = set(self.accept_states_dfa)
 
@@ -76,7 +70,6 @@ class NFAe:
         start_state = {}
         if name == 'NFAe':
             start_state = self.start_state
-
         elif name == 'DFA':
             start_state = set(self.start_state_dfa)
 
@@ -105,8 +98,7 @@ class NFAe:
         start = self.eClosure(self.start_state)
         d[tuple(start)] = labels[0]  # Đánh dấu là A
         # Thêm start vào tập chuyển trạng thái mới (Q') của DFA
-        states_new = [start]
-        idx = 0
+        idx, states_new = 0, [start]
 
         while idx < len(states_new):
             for alp in self.alphabet_without_e:
@@ -130,6 +122,8 @@ class NFAe:
                     v = d[tuple(v)]
                 self.keDFA[d[tuple(states_new[idx])]].append((v, alp))
             idx += 1
+
+        # phải sort lại vì set không có tự sắp xếp :)
         self.states_dfa = sorted(self.states_dfa)
         self.start_state_dfa = sorted(self.start_state_dfa)
         self.accept_states_dfa = sorted(self.accept_states_dfa)
@@ -172,7 +166,26 @@ class NFAe:
         cv2.destroyAllWindows()
         pass
 
+    def printNFAeFuncTable(self):
+        print("\nBảng hàm chuyển của NFAε")
+        header = ['']
+        for alp in self.alphabet:
+            header.append(alp)
+        table = PrettyTable(header)
+        table.align['Label'] = 'l'
+        table.border = table.header = True
+        for u in self.states:
+            row = [str(u)]
+            for alp in self.alphabet:
+                if (u, alp) in self.transition_function.keys():
+                    row.append(str(self.transition_function[(u, alp)]))
+                else:
+                    row.append('oo')
+            table.add_row(row)
+        print(table)
+
     def printDFAFuncTable(self):
+        print("\nBảng hàm chuyển của DFA")
         header = ['']
         for alp in self.alphabet_without_e:
             header.append(alp)
