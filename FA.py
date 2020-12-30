@@ -97,6 +97,8 @@ class NFAe:
         # Tính epsilon closure của trạng thái bắt đầu
         start = self.eClosure(self.start_state)
         d[tuple(start)] = labels[0]  # Đánh dấu là A
+        if self.in_accept_states(start):
+            self.accept_states_dfa.add(labels[0])
         # Thêm start vào tập chuyển trạng thái mới (Q') của DFA
         idx, states_new = 0, [start]
 
@@ -104,6 +106,7 @@ class NFAe:
             for alp in self.alphabet_without_e:
                 t = self.transition_to_state(states_new[idx], alp)
                 v = self.eClosure(t)
+
                 if v != set() and v not in states_new:  # nếu v không có trong tập trạng thái Q' của DFA
                     # Thêm v vào tập trạng thái Q' của DFA
                     states_new.append(v)
@@ -143,13 +146,13 @@ class NFAe:
         G = nx.MultiDiGraph()
         G.add_nodes_from(tuple(start_state), penwidth=2.0, color="blue")
         G.add_nodes_from([' '], penwidth=0.0)
-        for u in start_state:
-            G.add_edge(' ', u, label=' Start', penwidth=2.0)
+        G.add_edge(' ', tuple(start_state)[0], label=' Start', penwidth=2.0)
         G.add_nodes_from(tuple(accept_states), penwidth=2.0, color="red")
 
         for u in states:
             for v, w in ke[u]:
-                G.add_edge(u, v, label=' ' + w)
+                if v != 'oo':
+                    G.add_edge(u, v, label=' ' + w)
 
         G.graph['edge'] = {'arrowsize': '0.6', 'splines': 'curved'}
         G.graph['graph'] = {'scale': '14'}
@@ -200,7 +203,7 @@ class NFAe:
         print(table)
 
     def check(self, w):
-        print("Chuoi " + w + " co thuoc ngon ngu da cho?")
+        print("Chuỗi " + w + " có thuộc ngôn ngữ đã cho?")
         q = self.eClosure(self.start_state)
         for c in w:
             t = self.transition_to_state(q, c)
