@@ -26,8 +26,8 @@ accept_states = {10}  # trạng thái kết thúc
 nfae = NFAe(states, alphabet, transition_function,
             start_state, accept_states)
 
-transition_function_new = nfae.toDFA()
-nfae.printDFA(transition_function_new)
+transition_function_dfa = nfae.toDFA()
+nfae.printDFA(transition_function_dfa)
 
 w = "aaaaaaabb"
 nfae.check(w)

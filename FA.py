@@ -1,6 +1,10 @@
+import cv2
 import numpy as np
+import networkx as nx
+import matplotlib.pyplot as plt
 from prettytable import PrettyTable
-from utils import textcolor_display
+from utils import textcolor_display, remove_textcolor
+from networkx.drawing.nx_agraph import to_agraph
 
 
 class NFAe:
@@ -17,6 +21,8 @@ class NFAe:
         self.start_state = start_state
         self.accept_states = accept_states
         self.current_states = start_state
+        self.start_state_dfa = []
+        self.accept_states_dfa = []
         # Tập các đỉnh kề
         # Ex: ke[1] = [2, 3] # Đỉnh 1 có các đỉnh kề là 2, 3
         ke = {}
@@ -64,11 +70,13 @@ class NFAe:
         return (state & self.start_state) != set()
 
     def get_label_color(self, state, label):
-        if self.in_accept_states(state):
-            return textcolor_display(label, 'end')
-
         if self.in_start_state(state):
+            self.start_state_dfa.append(label)
             return textcolor_display(label, 'start')
+
+        if self.in_accept_states(state):
+            self.accept_states_dfa.append(label)
+            return textcolor_display(label, 'end')
 
         return label
 
@@ -82,7 +90,7 @@ class NFAe:
             start, labels[0])  # Đánh dấu là A
         # Thêm start vào tập chuyển trạng thái mới (Q') của DFA
         states_new = [start]
-        idx, transition_function_new = 0, []
+        idx, transition_function_dfa = 0, []
         while idx < len(states_new):
             for alp in self.alphabet_without_e:
                 t = self.transition_to_state(states_new[idx], alp)
@@ -98,33 +106,59 @@ class NFAe:
                     u = 'oo'
                 else:
                     u = d[tuple(u)]
-                transition_function_new.append(
+                transition_function_dfa.append(
                     ((d[tuple(states_new[idx])], alp), u))
                 # print(states_new[idx], '0', e)
 
             idx += 1
-        return transition_function_new
+        return transition_function_dfa
 
-    def printDFA(self, transition_function_new):
+    def printDFA(self, transition_function_dfa, table=True, graph=True):
         header = ['']
         for alp in self.alphabet_without_e:
             header.append(alp)
-        table = PrettyTable(header)
-        table.align['Label'] = 'l'
-        table.border = table.header = True
+        _table = PrettyTable(header)
+        _table.align['Label'] = 'l'
+        _table.border = _table.header = True
 
-        for i in range(0, len(transition_function_new), 2):
-            u = transition_function_new[i][0][0]
+        G = nx.MultiDiGraph()
+        G.add_nodes_from(self.start_state_dfa, penwidth=2.0, color="blue")
+        G.add_nodes_from([' '], penwidth=0.0)
+        for u in self.start_state_dfa:
+            G.add_edge(' ', u, label=' Start', penwidth=2.0)
+        G.add_nodes_from(self.accept_states_dfa, penwidth=2.0, color="red")
+        for i in range(0, len(transition_function_dfa), 2):
+            u = transition_function_dfa[i][0][0]
             row = [u]
             for j in range(len(self.alphabet_without_e)):
+                w = self.alphabet_without_e[j]
                 try:
-                    u0 = transition_function_new[i+j][1]
+                    v = transition_function_dfa[i+j][1]
+                    _u = remove_textcolor(u)
+                    _v = remove_textcolor(v)
+                    G.add_edge(_u, _v, label=' ' + w)
                 except:
-                    u0 = 'oo'
-                row.append(u0)
-            table.add_row(row)
+                    v = 'oo'
+                row.append(v)
+            _table.add_row(row)
 
-        print(table)
+        if table:
+            print(_table)
+
+        if graph:
+            G.graph['edge'] = {'arrowsize': '0.6', 'splines': 'curved'}
+            G.graph['graph'] = {'scale': '14'}
+
+            A = to_agraph(G)
+            A.layout('dot')
+            filename = 'DFA.png'
+            A.draw(filename)
+            dfa = cv2.imread(filename)
+            cv2.imshow('DFA', dfa)
+            cv2.waitKey(0)
+
+            # closing all open windows
+            cv2.destroyAllWindows()
 
     def check(self, w):
         print("Chuoi " + w + " co thuoc ngon ngu da cho?")
