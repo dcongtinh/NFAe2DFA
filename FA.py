@@ -78,11 +78,12 @@ class NFAe:
         return (state & start_state) != set()
 
     def get_label_color(self, state, label):
-        if self.in_start_state(state, 'DFA'):
-            return textcolor_display(str(label), 'start')
-
+        # Ưu tiên trạng thái kết thúc
         if self.in_accept_states(state, 'DFA'):
             return textcolor_display(str(label), 'end')
+
+        if self.in_start_state(state, 'DFA'):
+            return textcolor_display(str(label), 'start')
 
         return label
 
@@ -152,12 +153,19 @@ class NFAe:
         G.add_nodes_from(tuple(accept_states), penwidth=2.0, color="red")
 
         for u in states:
+            label = {}
             for v, w in ke[u]:
                 if v != 'oo':
-                    G.add_edge(u, v, label=' ' + w)
+                    if v not in label:
+                        label[v] = str(w)
+                    else:
+                        label[v] += ',' + str(w)
 
-        G.graph['edge'] = {'arrowsize': '0.6', 'splines': 'curved'}
-        G.graph['node'] = {'width': 0.5, 'height': 0.5, }
+            for v in label.keys():
+                G.add_edge(u, v, label=label[v])
+
+        G.graph['edge'] = {'arrowsize': 0.5, 'splines': 'curved'}
+        G.graph['node'] = {'width': 0.5, 'height': 0.5}
         G.graph['graph'] = {'rankdir': 'LR', 'dpi': 120, 'size': '20,15'}
 
         A = to_agraph(G)
@@ -171,7 +179,11 @@ class NFAe:
         # # closing all open windows
         # cv2.destroyAllWindows()
         # Nếu sử dụng Jupyter
-        plt.figure(figsize=(16, 9))  # set figsize
+        if len(states) > 5:
+            figsize = (16, 9)
+        else:
+            figsize = (10, 5)
+        plt.figure(figsize=figsize)  # set figsize
         fig = plt.imread(filename)
         plt.axis('off')
         plt.imshow(fig)

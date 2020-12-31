@@ -34,3 +34,41 @@ transition_function = {
 }
 start_state = {1}  # trạng thái bắt đầu
 accept_states = {2}  # trạng thái kết thúc
+
+# Bài 3
+
+states = {1, 2, 3, 4}  # trạng thái states
+alphabet = ['0', '1', 'ε']  # bộ chữ cái nhập alphabet
+
+# Hàm chuyển trạng thái
+transition_function = {
+    (1, '0'): {2},
+    (1, '1'): {1},
+    (2, '0'): {3},
+    (2, '1'): {2},
+    (2, 'ε'): {1},
+    (3, '0'): {4},
+    (3, '1'): {3},
+    (3, 'ε'): {2},
+    (4, '0'): {1},
+    (4, '1'): {4},
+    (4, 'ε'): {3},
+}
+start_state = {1}  # trạng thái bắt đầu
+accept_states = {2, 3}  # trạng thái kết thúc
+
+# Bài 4
+
+states = {1, 2, 3}  # trạng thái states
+alphabet = ['0', '1', 'ε']  # bộ chữ cái nhập alphabet
+
+# Hàm chuyển trạng thái
+transition_function = {
+    (1, '0'): {1},
+    (1, 'ε'): {2},
+    (2, '0'): {3},
+    (2, '1'): {2},
+    (3, '0'): {3},
+}
+start_state = {1}  # trạng thái bắt đầu
+accept_states = {3}  # trạng thái kết thúc
