@@ -227,6 +227,6 @@ class NFAe:
             t = self.transition_to_state(q, c)
             q = self.eClosure(t)
         if self.in_accept_states(q):
-            print("\nChuỗi " + w + " THUỘC ngôn ngữ đã cho!!!\n")
+            print("\nChuỗi '" + w + "' THUỘC ngôn ngữ đã cho!!!\n")
         else:
-            print("\nChuỗi " + w + " KHÔNG THUỘC ngôn ngữ đã cho!!!\n")
+            print("\nChuỗi '" + w + "' KHÔNG THUỘC ngôn ngữ đã cho!!!\n")
