@@ -1,9 +1,10 @@
 import cv2
 import numpy as np
 import networkx as nx
+import matplotlib.pyplot as plt
+from utils import textcolor_display
 from prettytable import PrettyTable
 from networkx.drawing.nx_agraph import to_agraph
-from utils import textcolor_display, remove_textcolor
 
 
 class NFAe:
@@ -32,6 +33,7 @@ class NFAe:
         # Mảng đánh dấu đỉnh đã duyệt
         self.visited = [False] * self.n_state
 
+    # Tính epsilon closure của u
     def eClosure1(self, u, A):
         self.visited[u] = True
         A.append(u)
@@ -155,19 +157,24 @@ class NFAe:
                     G.add_edge(u, v, label=' ' + w)
 
         G.graph['edge'] = {'arrowsize': '0.6', 'splines': 'curved'}
-        G.graph['graph'] = {'scale': '14'}
+        G.graph['node'] = {'width': 0.5, 'height': 0.5, }
+        G.graph['graph'] = {'rankdir': 'LR', 'dpi': 120, 'size': '20,15'}
 
         A = to_agraph(G)
         A.layout('dot')
         filename = name + '.png'
         A.draw(filename)
-        fig = cv2.imread(filename)
-        cv2.imshow(name, fig)
-        cv2.waitKey(0)
-
-        # closing all open windows
-        cv2.destroyAllWindows()
-        pass
+        # Nếu sử dụng console
+        # fig = cv2.imread(filename)
+        # cv2.imshow(name, fig)
+        # cv2.waitKey(0)
+        # # closing all open windows
+        # cv2.destroyAllWindows()
+        # Nếu sử dụng Jupyter
+        plt.figure(figsize=(16, 9))  # set figsize
+        fig = plt.imread(filename)
+        plt.axis('off')
+        plt.imshow(fig)
 
     def printNFAeFuncTable(self):
         print("\nBảng hàm chuyển của NFAε")

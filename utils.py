@@ -26,9 +26,3 @@ def textcolor_display(text, type_mes='er'):
         else:
             begin = '\033[91m'
         return begin + text + end
-
-
-def remove_textcolor(text):
-    if "\033[" in text:
-        return text[5:-5]
-    return text
